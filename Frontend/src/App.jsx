@@ -1,14 +1,13 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-
-
+import { useState } from "react";
+import { PingComponent } from "./components/atoms/PingComponent";
 function App() {
-
-  return (
+  const [isVisible, setIsVisible] = useState(false);
+  return(
     <>
-      Hello
+    <button onClick={()=>setIsVisible(!isVisible)}>toggle</button>
+    {isVisible && <PingComponent />}
     </>
   )
 }
 
-export default App
+export default App;
