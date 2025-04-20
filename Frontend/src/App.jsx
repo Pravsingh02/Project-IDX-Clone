@@ -1,12 +1,8 @@
-import { useState } from "react";
-import { PingComponent } from "./components/atoms/PingComponent";
+import { Router } from "./Router";
 function App() {
-  const [isVisible, setIsVisible] = useState(false);
   return(
-    <>
-    <button onClick={()=>setIsVisible(!isVisible)}>toggle</button>
-    {isVisible && <PingComponent />}
-    </>
+    <Router />
+    
   )
 }
 
