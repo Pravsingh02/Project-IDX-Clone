@@ -4,19 +4,30 @@ import { EditorButton } from "../components/atoms/EditorButton/EditorButton";
 import { TreeStructure } from "../components/organisms/TreeStructure/TreeStructure";
 import { useEffect } from "react";
 import { useTreeStructureStore } from "../stores/treeStructureStore";
-
+import { useEditorSocketStore } from "../stores/editorSocketStore";
+import {io} from "socket.io-client";
 export const ProjectPlayground = () => {
      const {projectId:projectIdFromUrl} = useParams();
 
      const {setProjectId,projectId} = useTreeStructureStore();
+
+     const {setEditorSocket} = useEditorSocketStore();
      useEffect(() => {
+          if(projectIdFromUrl){
           setProjectId(projectIdFromUrl);
-     },[setProjectId,projectIdFromUrl]);
+          const editorSocketConnection = io(`${import.meta.env.VITE_BACKEND_URL}/editor`,{
+               query:{
+                    projectId:projectIdFromUrl
+               },
+          });
+          setEditorSocket(editorSocketConnection);
+          }
+          
+     },[setProjectId,projectIdFromUrl,setEditorSocket]);
      return (
           <>
-               Project Id :{projectIdFromUrl}
-               {
-                    projectId && (
+               <div style={{display:"flex"}}>
+               {projectId && (
                          <div
                               style={{
                                    paddingRight:"10px",
@@ -29,9 +40,11 @@ export const ProjectPlayground = () => {
                               }}>
                                    <TreeStructure />
                          </div>
-                    ) 
-               }
-               <EditorComponent />
+                    )} 
+                    <EditorComponent />
+               </div>
+               
+               
                <EditorButton isActive={true}/>
                <EditorButton isActive={false}/>
                
