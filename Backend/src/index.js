@@ -50,7 +50,7 @@ editorNamespace.on("connection", (socket) => {
       console.log(event, path);
     });
 
-    handleEditorSocketEvents(socket);
+    handleEditorSocketEvents(socket,editorNamespace);
 
     socket.on('disconnect', async () => {
       console.log('User disconnected from editor');
