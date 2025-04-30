@@ -6,6 +6,7 @@ import { PORT } from './config/serverConfig.js';
 import apiRouter from './routes/index.js';
 import chokidar from 'chokidar';
 import { handleEditorSocketEvents } from './sockethandlers/editorHandlers.js';
+import { handleContainerCreate } from './containers/handleContainerCreate.js';
 
 const app = express();
 const server = createServer(app);
@@ -30,7 +31,6 @@ editorNamespace.on("connection", (socket) => {
   console.log('Editor Connected');
 
   const query = { ...socket.handshake.query };
-  console.log("Query received after connection", query);
   const projectId = query.projectId;
   
   console.log("Project id received after connection", projectId);
@@ -59,7 +59,22 @@ editorNamespace.on("connection", (socket) => {
   }
 });
 
-
+const terminalNamespace = io.of('/terminal');
+terminalNamespace.on("connection", (socket) => {
+  const query = { ...socket.handshake.query };
+  let projectId = query.projectId;
+  console.log('Terminal Connected');
+    socket.on('shell-input', (data) => {
+      console.log('Received shell input:', data);
+      terminalNamespace.emit('shell-output', data);
+    });
+    socket.on('disconnect',  () => {
+      console.log('User disconnected from terminal');
+    });
+    handleContainerCreate(projectId,socket);
+})
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(process.cwd());
+  
 } );
