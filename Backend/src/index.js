@@ -7,6 +7,7 @@ import apiRouter from './routes/index.js';
 import chokidar from 'chokidar';
 import { handleEditorSocketEvents } from './sockethandlers/editorHandlers.js';
 import { handleContainerCreate } from './containers/handleContainerCreate.js';
+import { WebSocketServer } from 'ws';
 
 const app = express();
 const server = createServer(app);
@@ -49,32 +50,34 @@ editorNamespace.on("connection", (socket) => {
     watcher.on("all", (event, path) => {
       console.log(event, path);
     });
-
-    handleEditorSocketEvents(socket,editorNamespace);
-
-    socket.on('disconnect', async () => {
-      console.log('User disconnected from editor');
-      await watcher.close();
-    });
   }
+  handleEditorSocketEvents(socket,editorNamespace);
+
 });
 
-const terminalNamespace = io.of('/terminal');
-terminalNamespace.on("connection", (socket) => {
-  const query = { ...socket.handshake.query };
-  let projectId = query.projectId;
-  console.log('Terminal Connected');
-    socket.on('shell-input', (data) => {
-      console.log('Received shell input:', data);
-      terminalNamespace.emit('shell-output', data);
-    });
-    socket.on('disconnect',  () => {
-      console.log('User disconnected from terminal');
-    });
-    handleContainerCreate(projectId,socket);
-})
+
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(process.cwd());
-  
 } );
+
+const webSocketForTerminal = new WebSocketServer({
+  noServer: true,
+});
+server.on('upgrade', (req, tcpSocket, head) => {
+  const isTerminal = req.url.includes(`/terminal`);
+
+  if(isTerminal)
+  {
+    console.log("requested url : ",req.url);
+    const projectId = req.url.split('=')[1];
+    console.log("Project id received after connection", projectId);
+    handleContainerCreate(projectId,webSocketForTerminal,req,tcpSocket,head);
+  }
+  
+
+});
+webSocketForTerminal.on(`connection`, (ws,req) => {
+  console.log("Terminal connected",ws,req);
+})
+  
